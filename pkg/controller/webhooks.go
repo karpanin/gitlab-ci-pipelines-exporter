@@ -38,6 +38,41 @@ func (c *Controller) processPipelineEvent(ctx context.Context, e goGitlab.Pipeli
 	))
 }
 
+func (c *Controller) processJobEvent(ctx context.Context, e goGitlab.JobEvent) {
+	var (
+		refKind schemas.RefKind
+		refName = e.Ref
+	)
+
+	if e.BuildFinishedAt == "" {
+
+		return
+	}
+
+	mr, err := regexp.MatchString("merge-requests", e.Ref)
+	if err != nil {
+		log.Debug("job is not from merge request")
+	}
+
+	if (mr) {
+		refKind = schemas.RefKindMergeRequest
+		re := regexp.MustCompile(`refs/merge-requests/(.*)/head`)
+		mrid := re.FindStringSubmatch(e.Ref)
+		refName = mrid[1]
+	} else if e.Tag {
+		refKind = schemas.RefKindTag
+	} else {
+		refKind = schemas.RefKindBranch
+	}
+
+	c.triggerRefMetricsPull(ctx, schemas.NewRef(
+		schemas.NewProject(strings.ToLower(strings.ReplaceAll(e.ProjectName, " ", ""))),
+		refKind,
+		refName,
+	))
+	
+}
+
 func (c *Controller) triggerRefMetricsPull(ctx context.Context, ref schemas.Ref) {
 	logFields := log.Fields{
 		"project-name": ref.Project.Name,

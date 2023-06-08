@@ -7,19 +7,19 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
-	"golang.org/x/exp/slices"
+	//"golang.org/x/exp/slices"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 )
 
 // PullRefMetrics ..
 func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error {
-	finishedStatusesList := []string{
-		"success",
-		"failed",
-		"skipped",
-		"cancelled",
-	}
+	// finishedStatusesList := []string{
+	// 	"success",
+	// 	"failed",
+	// 	"skipped",
+	// 	"cancelled",
+	// }
 
 	// At scale, the scheduled ref may be behind the actual state being stored
 	// to avoid issues, we refresh it from the store before manipulating it
@@ -149,7 +149,7 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 	}
 
 	// fetch pipeline test report
-	if ref.Project.Pull.Pipeline.TestReports.Enabled && slices.Contains(finishedStatusesList, ref.LatestPipeline.Status) {
+	if ref.Project.Pull.Pipeline.TestReports.Enabled {//&& slices.Contains(finishedStatusesList, ref.LatestPipeline.Status) {
 		ref.LatestPipeline.TestReport, err = c.Gitlab.GetRefPipelineTestReport(ctx, ref)
 		if err != nil {
 			return err
